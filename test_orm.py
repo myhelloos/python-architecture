@@ -37,8 +37,12 @@ def test_orderline_mapper_can_save_lines(session):
 
 
 def test_batches(session):
-    session.execute('INSERT INTO "batches" VALUES ("batch1", "sku1", 100, null)')
-    session.execute('INSERT INTO "batches" VALUES ("batch2", "sku2", 200, "2011-04-11")')
+    session.execute(
+        'INSERT INTO "batches" (reference, sku, _purchased_quantity, eta)'
+        'VALUES ("batch1", "sku1", 100, null)')
+    session.execute(
+        'INSERT INTO "batches" (reference, sku, _purchased_quantity, eta)'
+        'VALUES ("batch2", "sku2", 200, "2011-04-11")')
 
     expected = [
         model.Batch("batch1", "sku1", 100, eta=None)

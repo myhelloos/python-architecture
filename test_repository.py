@@ -73,4 +73,4 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     # Batch.__eq__ only compares reference
     assert retrived.sku == expected.sku
     assert retrived._purchased_quantity == expected._purchased_quantity
-    assert retrived._allocations == expected.allocate()
+    assert retrived._allocations == {model.OrderLine("order1", "GENERIC-SOFA", 12)}
