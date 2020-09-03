@@ -52,4 +52,15 @@ def test_error_for_invalid_sku():
     line = model.OrderLine("o1", "NONEXISTENTSKU", 10)
 
     with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
-        result = services.allocate(line, repo, FakeSession())
+        services.allocate(line, repo, FakeSession())
+
+
+def test_commits():
+    batch = model.Batch('b1', 'OMINOUS-MIRROR', 100, eta=None)
+    repo = FakeRepository([batch])
+    session = FakeSession()
+
+    line = model.OrderLine('01', 'OMINOUS-MIRROR', 10)
+    services.allocate(line, repo, session)
+
+    assert session.commited is True
