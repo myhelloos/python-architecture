@@ -7,8 +7,11 @@
 @time: 2020/9/3 6:17 PM
 @desc:
 """
+import pytest
+
 import model
 import repository
+import services
 
 
 class FakeRepository(repository.AbstractRepository):
@@ -23,3 +26,22 @@ class FakeRepository(repository.AbstractRepository):
 
     def list(self):
         return list(self.__batches)
+
+
+def test_returns_allocation():
+    batch = model.Batch('b1', 'COMPLICATED-LAMP', 100, eta=None)
+    repo = FakeRepository([batch])
+
+    line = model.OrderLine('o1', 'COMPLICATED-LAMP', 10)
+    result = services.allocate(line, repo, FakeSession())
+
+    assert result == 'b1'
+
+def test_error_for_invalid_sku():
+    batch = model.Batch('b1', 'AREALSKU', 100, eta=None)
+    repo = FakeRepository([batch])
+
+    line = model.OrderLine("o1", "NONEXISTENTSKU", 10)
+
+    with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
+        result = services.allocate(line, repo, FakeSession())
