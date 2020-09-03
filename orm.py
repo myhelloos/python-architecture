@@ -19,7 +19,7 @@ order_lines = Table(
     , Column('id', Integer, primary_key=True, autoincrement=True)
     , Column('sku', String(255))
     , Column('qty', Integer, nullable=False)
-    , Column('orderid', String(255))
+    , Column('orderid', String(255), nullable=False)
 )
 
 batches = Table(
