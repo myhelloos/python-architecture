@@ -3,7 +3,6 @@
 """
 @author: alfred
 @license: (C) Copyright 2019-2020, Node Supply Chain Manager Corporation Limited.
-@file: test_orm.py
 @time: 2020/9/2 11:33 AM
 @desc:
 """

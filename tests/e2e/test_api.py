@@ -3,7 +3,6 @@
 """
 @author: alfred
 @license: (C) Copyright 2019-2020, Alfred Yuan Limited.
-@file: test_api.py
 @time: 2020/9/3 11:35 AM
 @desc:
 """
