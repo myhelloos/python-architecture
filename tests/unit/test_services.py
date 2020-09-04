@@ -26,6 +26,10 @@ class FakeRepository(repository.AbstractRepository):
     def list(self):
         return list(self.__batches)
 
+    @staticmethod
+    def for_batch(ref, sku, qty, eta=None):
+        return model.Batch(ref, sku, qty, eta)
+
 
 class FakeSession():
     commited = False
@@ -35,7 +39,7 @@ class FakeSession():
 
 
 def test_returns_allocation():
-    batch = model.Batch('b1', 'COMPLICATED-LAMP', 100, eta=None)
+    batch = FakeRepository.for_batch('b1', 'COMPLICATED-LAMP', 100, eta=None)
     repo = FakeRepository([batch])
 
     result = services.allocate('o1', 'COMPLICATED-LAMP', 10, repo, FakeSession())
@@ -44,7 +48,7 @@ def test_returns_allocation():
 
 
 def test_error_for_invalid_sku():
-    batch = model.Batch('b1', 'AREALSKU', 100, eta=None)
+    batch = FakeRepository.for_batch('b1', 'AREALSKU', 100, eta=None)
     repo = FakeRepository([batch])
 
     with pytest.raises(services.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
@@ -52,7 +56,7 @@ def test_error_for_invalid_sku():
 
 
 def test_commits():
-    batch = model.Batch('b1', 'OMINOUS-MIRROR', 100, eta=None)
+    batch = FakeRepository.for_batch('b1', 'OMINOUS-MIRROR', 100)
     repo = FakeRepository([batch])
     session = FakeSession()
 
