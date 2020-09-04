@@ -10,9 +10,8 @@
 from datetime import date
 from typing import Optional
 
-from domain import model
-from domain.model import OrderLine
-from adapters.repository import AbstractRepository
+from src.allocation.domain import model
+from src.allocation.adapters import AbstractRepository
 
 
 class InvalidSku(Exception):

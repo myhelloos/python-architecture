@@ -6,8 +6,8 @@
 @time: 2020/9/2 12:59 PM
 @desc:
 """
-from domain import model
-from adapters import repository
+from src.allocation.domain import model
+from src.allocation.adapters import repository
 
 
 def test_repository_can_save_a_batch(session):

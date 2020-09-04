@@ -8,7 +8,7 @@
 """
 from datetime import date
 
-from domain import model
+from src.allocation.domain import model
 
 
 def test_orderline_mapper_can_load_lines(session):

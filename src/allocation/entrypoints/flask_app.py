@@ -14,9 +14,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import config
-from domain import model
-from adapters import repository, orm
-from service_layer import services
+from src.allocation.domain import model
+from src.allocation.adapters import repository, orm
+from src.allocation.service_layer import services
 
 orm.start_mappers()
 get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))

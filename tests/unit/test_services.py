@@ -8,9 +8,9 @@
 """
 import pytest
 
-from domain import model
-from adapters import repository
-from service_layer import services
+from src.allocation.domain import model
+from src.allocation.adapters import repository
+from src.allocation.service_layer import services
 
 
 class FakeRepository(repository.AbstractRepository):
