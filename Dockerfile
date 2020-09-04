@@ -1,14 +1,6 @@
 FROM python:3.8-alpine
 
-COPY repositories /etc/apk/repositories
-RUN apk update && apk add vim curl net-tools lua
-
-RUN apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev
-RUN apk add libpq
-
-RUN pip install -U pip
-RUN pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/web/simple
-RUN pip config set install.trusted-host mirrors.ustc.edu.cn
+RUN apk update && apk add --no-cache --virtual .build-deps gcc postgresql-dev musl-dev python3-dev libpq
 
 COPY requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt
