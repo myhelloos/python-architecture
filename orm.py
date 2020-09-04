@@ -19,7 +19,7 @@ order_lines = Table(
     , Column('id', Integer, primary_key=True, autoincrement=True)
     , Column('sku', String(255))
     , Column('qty', Integer, nullable=False)
-    , Column('orderid', String(255), nullable=False)
+    , Column('orderid', String(255))
 )
 
 batches = Table(
@@ -28,8 +28,8 @@ batches = Table(
     , Column('id', Integer, primary_key=True, autoincrement=True)
     , Column('reference', String(255))
     , Column('sku', String(255))
-    , Column('_purchased_quantity', Integer)
-    , Column('eta', Date)
+    , Column('_purchased_quantity', Integer, nullable=False)
+    , Column('eta', Date, nullable=True)
 )
 
 allocations = Table(
