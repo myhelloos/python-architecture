@@ -1,5 +1,4 @@
-# Example application code for the python architecture book
-
+# python architecture [![Build Status](https://travis-ci.org/myhelloos/python-architecture.svg?branch=feat-chatper-01)](https://travis-ci.org/myhelloos/python-architecture)
 ## Chapters
 
 Each chapter has its own branch which contains all the commits for that chapter,
