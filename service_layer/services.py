@@ -7,6 +7,9 @@
 @time: 2020/9/4 11:17 AM
 @desc:
 """
+from datetime import date
+from typing import Optional
+
 from domain import model
 from domain.model import OrderLine
 from adapters.repository import AbstractRepository
@@ -30,3 +33,14 @@ def allocate(orderid: str, sku: str, qty: int, repo: AbstractRepository, session
     session.commit()
 
     return batch_ref
+
+
+def add_batch(
+        ref: str
+        , sku: str
+        , qty: int
+        , eta: Optional[date]
+        , repo: AbstractRepository
+        , session):
+    repo.add(model.Batch(ref, sku, qty, eta))
+    session.commit()

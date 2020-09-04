@@ -63,3 +63,12 @@ def test_commits():
     services.allocate('o1', 'OMINOUS-MIRROR', 10, repo, session)
 
     assert session.commited is True
+
+
+def test_add_batch():
+    repo, session = FakeRepository([]), FakeSession()
+
+    services.add_batch('b1', 'CRUNCHY-ARMCHAIR', 100, None, repo, session)
+
+    assert repo.get('b1') is not None
+    assert session.commited is True
