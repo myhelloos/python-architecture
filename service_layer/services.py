@@ -7,9 +7,9 @@
 @time: 2020/9/4 11:17 AM
 @desc:
 """
-import model
-from model import OrderLine
-from repository import AbstractRepository
+from domain import model
+from domain.model import OrderLine
+from adapters.repository import AbstractRepository
 
 
 class InvalidSku(Exception):

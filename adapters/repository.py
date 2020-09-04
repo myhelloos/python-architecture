@@ -9,7 +9,7 @@
 """
 import abc
 
-import model
+from domain import model
 
 
 class AbstractRepository(abc.ABC):

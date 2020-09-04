@@ -9,7 +9,7 @@
 """
 from sqlalchemy import MetaData, Table, Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import mapper, relationship
-import model
+from domain import model
 
 metadata = MetaData()
 

@@ -7,8 +7,8 @@
 @time: 2020/9/2 12:59 PM
 @desc:
 """
-import model
-import repository
+from domain import model
+from adapters import repository
 
 
 def test_repository_can_save_a_batch(session):
