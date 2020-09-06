@@ -14,17 +14,16 @@ from allocation.domain import model
 from allocation.adapters import repository
 from allocation.service_layer import services, unit_of_work
 
-from allocation.domain.model import OutOfStock
-
 
 class FakeRepository(repository.AbstractRepository):
     def __init__(self, products: [model.Product]):
+        super().__init__()
         self.__products = set(products)
 
-    def add(self, product: model.Product):
+    def _add(self, product: model.Product):
         self.__products.add(product)
 
-    def get(self, sku) -> model.Product:
+    def _get(self, sku) -> model.Product:
         return next((p for p in self.__products if p.sku == sku), None)
 
 
@@ -33,7 +32,7 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
         self.products = FakeRepository([])
         self.committed = False
 
-    def commit(self):
+    def _commit(self):
         self.committed = True
 
     def rollback(self):
@@ -89,8 +88,7 @@ def test_sends_email_on_out_of_stock_error():
     services.add_batch('b1', 'POPULAR-CURTAINS', 9, None, uow)
 
     with mock.patch('allocation.adapters.email.send_mail') as mock_send_email:
-        with pytest.raises(OutOfStock):
-            services.allocate('o1', 'POPULAR-CURTAINS', 10, uow)
+        services.allocate('o1', 'POPULAR-CURTAINS', 10, uow)
 
         assert mock_send_email.call_args == mock.call(
             "stock@made.com"

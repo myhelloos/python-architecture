@@ -8,11 +8,11 @@
 @desc:
 """
 from datetime import date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from allocation.domain import model
 
-from allocation.service_layer import unit_of_work
+from . import unit_of_work
 
 
 class InvalidSku(Exception):
@@ -34,8 +34,7 @@ def allocate(
         line = model.OrderLine(orderid, sku, qty)
         batch_ref = product.allocate(line)
         uow.commit()
-
-    return batch_ref
+        return batch_ref
 
 
 def add_batch(
