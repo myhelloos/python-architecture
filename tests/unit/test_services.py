@@ -6,11 +6,15 @@
 @time: 2020/9/3 6:17 PM
 @desc:
 """
+from unittest import mock
+
 import pytest
 
 from allocation.domain import model
 from allocation.adapters import repository
 from allocation.service_layer import services, unit_of_work
+
+from allocation.domain.model import OutOfStock
 
 
 class FakeRepository(repository.AbstractRepository):
@@ -78,3 +82,17 @@ def test_add_batch_for_existing_product():
     services.add_batch('b2', 'GARISH-RUG', 99, None, uow)
 
     assert 'b2' in [b.reference for b in uow.products.get('GARISH-RUG').batches]
+
+
+def test_sends_email_on_out_of_stock_error():
+    uow = FakeUnitOfWork()
+    services.add_batch('b1', 'POPULAR-CURTAINS', 9, None, uow)
+
+    with mock.patch('allocation.adapters.email.send_mail') as mock_send_email:
+        with pytest.raises(OutOfStock):
+            services.allocate('o1', 'POPULAR-CURTAINS', 10, uow)
+
+        assert mock_send_email.call_args == mock.call(
+            "stock@made.com"
+            , f"Out of stock for POPULAR-CURTAINS"
+        )
