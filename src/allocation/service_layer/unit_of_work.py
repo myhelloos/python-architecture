@@ -36,7 +36,10 @@ class AbstractUnitOfWork(abc.ABC):
 
 
 DEFAULT_SESSION_FACTORY = sessionmaker(
-    bind=create_engine(config.get_postgres_uri())
+    bind=create_engine(
+        config.get_postgres_uri()
+        , isolation_level='REPEATABLE READ'
+    )
 )
 
 
