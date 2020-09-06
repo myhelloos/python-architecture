@@ -81,7 +81,3 @@ class Batch:
         if other.eta is None:
             return True
         return self.eta > other.eta
-
-
-class OutOfStock(Exception):
-    pass

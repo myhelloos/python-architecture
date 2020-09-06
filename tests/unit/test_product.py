@@ -1,8 +1,8 @@
 #! python3
 from datetime import date, timedelta
-from allocation.domain import events
 
-from allocation.domain.model import Product, Batch, OrderLine, OutOfStock
+from allocation.domain import events
+from allocation.domain.model import Product, Batch, OrderLine
 
 today = date.today()
 tomorrow = today + timedelta(days=1)
