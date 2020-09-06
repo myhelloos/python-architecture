@@ -53,3 +53,13 @@ def test_raises_out_of_stock_exception_if_cannot_allocate():
 
     with pytest.raises(OutOfStock, match="SMALL-FORK"):
         product.allocate(OrderLine("order2", "SMALL-FORK", 1))
+
+
+def test_increment_version_number():
+    product = Product(sku='SCANDI-PEN', batches=[Batch('b1', 'SCANDI-PEN', 100, eta=None)])
+    product.version_number = 7
+
+    line = OrderLine('oref', 'SCANDI-PEN', 10)
+    product.allocate(line)
+
+    assert product.version_number == 8
