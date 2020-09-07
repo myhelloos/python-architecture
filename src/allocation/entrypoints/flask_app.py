@@ -10,7 +10,7 @@
 from datetime import datetime
 
 from allocation.adapters import orm
-from allocation.service_layer import services, unit_of_work
+from allocation.service_layer import handlers, unit_of_work
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -20,13 +20,13 @@ orm.start_mappers()
 @app.route('/allocate', methods=['POST'])
 def allocate_endpoint():
     try:
-        batchref = services.allocate(
+        batchref = handlers.allocate(
             request.json['orderid']
             , request.json['sku']
             , request.json['qty']
             , unit_of_work.SqlAlchemyUnitOfWork()
         )
-    except services.InvalidSku as e:
+    except handlers.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
     return jsonify({'batchref': batchref}), 201
@@ -38,7 +38,7 @@ def add_stock():
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
 
-    services.add_batch(
+    handlers.add_batch(
         request.json['ref']
         , request.json['sku']
         , request.json['qty']
