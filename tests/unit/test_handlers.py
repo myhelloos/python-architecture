@@ -75,12 +75,12 @@ class TestAllocate:
             , uow
         )
 
-        result = messagebus.handle(
+        results = messagebus.handle(
             events.AllocationRequired('o1', 'COMPLICATED-LAMP', 10)
             , uow
         )
 
-        assert result == 'b1'
+        assert results.pop(0) == 'b1'
 
     def test_error_for_invalid_sku(self):
         uow = FakeUnitOfWork()
