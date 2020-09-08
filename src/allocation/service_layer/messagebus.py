@@ -11,6 +11,7 @@ from typing import Dict, Type, List, Callable, Union
 
 from allocation.domain import events, commands
 from allocation.service_layer import unit_of_work, handlers
+from tenacity import Retrying, stop_after_attempt, wait_exponential, RetryError
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,19 @@ def handle_event(
 ):
     for handler in EVENT_HANDLERS[type(event)]:
         try:
-            logger.debug('handling event %s with handler %s', event, handler)
-            handler(event, uow)
-            queue.extend(uow.collect_new_events())
-        except Exception:
-            logger.exception('Exception handling event %s', event)
+            for attempt in Retrying(
+                    stop=stop_after_attempt(3)
+                    , wait=wait_exponential()
+            ):
+                with attempt:
+                    logger.debug('handling event %s with handler %s', event, handler)
+                    handler(event, uow)
+                    queue.extend(uow.collect_new_events())
+        except RetryError as retry_failure:
+            logger.exception(
+                'Failed to handle event %s times, giving up'
+                , retry_failure.last_attempt.attempt_number
+            )
             continue
 
 
