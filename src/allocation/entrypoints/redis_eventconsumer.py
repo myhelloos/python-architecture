@@ -33,3 +33,7 @@ def main():
 
     for m in pubsub.listen():
         handle_change_batch_quantity(m)
+
+
+if __name__ == '__main__':
+    main()
