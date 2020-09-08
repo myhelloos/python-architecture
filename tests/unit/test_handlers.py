@@ -11,7 +11,7 @@ from unittest import mock
 
 import pytest
 
-from allocation.domain import model, events
+from allocation.domain import model, events, commands
 from allocation.adapters import repository
 from allocation.service_layer import handlers, unit_of_work, messagebus
 
@@ -55,7 +55,7 @@ class TestAddBatch:
         uow = FakeUnitOfWork()
 
         messagebus.handle(
-            events.BatchCreated('b1', 'CRUNCHY-ARMCHAIR', 100, None)
+            commands.CreateBatch('b1', 'CRUNCHY-ARMCHAIR', 100, None)
             , uow
         )
 
@@ -66,11 +66,11 @@ class TestAddBatch:
         uow = FakeUnitOfWork()
 
         messagebus.handle(
-            events.BatchCreated('b1', 'GARISH-RUG', 100, None)
+            commands.CreateBatch('b1', 'GARISH-RUG', 100, None)
             , uow
         )
         messagebus.handle(
-            events.BatchCreated('b2', 'GARISH-RUG', 99, None)
+            commands.CreateBatch('b2', 'GARISH-RUG', 99, None)
             , uow
         )
 
@@ -81,12 +81,12 @@ class TestAllocate:
     def test_returns_allocation(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
-            events.BatchCreated('b1', 'COMPLICATED-LAMP', 100, None)
+            commands.CreateBatch('b1', 'COMPLICATED-LAMP', 100, None)
             , uow
         )
 
         results = messagebus.handle(
-            events.AllocationRequired('o1', 'COMPLICATED-LAMP', 10)
+            commands.Allocate('o1', 'COMPLICATED-LAMP', 10)
             , uow
         )
 
@@ -95,25 +95,25 @@ class TestAllocate:
     def test_error_for_invalid_sku(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
-            events.BatchCreated('b1', 'AREALSKU', 100, None)
+            commands.CreateBatch('b1', 'AREALSKU', 100, None)
             , uow
         )
 
         with pytest.raises(handlers.InvalidSku, match="Invalid sku NONEXISTENTSKU"):
             messagebus.handle(
-                events.AllocationRequired("o1", "NONEXISTENTSKU", 10)
+                commands.Allocate("o1", "NONEXISTENTSKU", 10)
                 , uow
             )
 
     def test_commits(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
-            events.BatchCreated('b1', 'OMINOUS-MIRROR', 100, None)
+            commands.CreateBatch('b1', 'OMINOUS-MIRROR', 100, None)
             , uow
         )
 
         messagebus.handle(
-            events.AllocationRequired('o1', 'OMINOUS-MIRROR', 10)
+            commands.Allocate('o1', 'OMINOUS-MIRROR', 10)
             , uow
         )
 
@@ -122,13 +122,13 @@ class TestAllocate:
     def test_sends_email_on_out_of_stock_error(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
-            events.BatchCreated('b1', 'POPULAR-CURTAINS', 9, None)
+            commands.CreateBatch('b1', 'POPULAR-CURTAINS', 9, None)
             , uow
         )
 
         with mock.patch('allocation.adapters.email.send_mail') as mock_send_email:
             messagebus.handle(
-                events.AllocationRequired('o1', 'POPULAR-CURTAINS', 10)
+                commands.Allocate('o1', 'POPULAR-CURTAINS', 10)
                 , uow
             )
 
@@ -142,25 +142,22 @@ class TestChangeBatchQuantity:
     def test_changes_available_quantity(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
-            events.BatchCreated('batch1', 'ADORABLE-SETTEE', 100)
+            commands.CreateBatch('batch1', 'ADORABLE-SETTEE', 100)
             , uow
         )
         [batch] = uow.products.get(sku='ADORABLE-SETTEE').batches
         assert batch.available_quantity == 100
 
-        messagebus.handle(
-            events.BatchQuantityChanged('batch1', 50)
-            , uow
-        )
+        messagebus.handle(commands.ChangeBatchQuantity('batch1', 50), uow)
         assert batch.available_quantity == 50
 
     def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
         event_history = [
-            events.BatchCreated('batch1', 'INDIFFERENT-TABLE', 50, None)
-            , events.BatchCreated('batch2', 'INDIFFERENT-TABLE', 50, date.today())
-            , events.AllocationRequired('order1', 'INDIFFERENT-TABLE', 20)
-            , events.AllocationRequired('order2', 'INDIFFERENT-TABLE', 20)
+            commands.CreateBatch('batch1', 'INDIFFERENT-TABLE', 50, None)
+            , commands.CreateBatch('batch2', 'INDIFFERENT-TABLE', 50, date.today())
+            , commands.Allocate('order1', 'INDIFFERENT-TABLE', 20)
+            , commands.Allocate('order2', 'INDIFFERENT-TABLE', 20)
         ]
 
         for e in event_history:
@@ -170,10 +167,7 @@ class TestChangeBatchQuantity:
         assert batch1.available_quantity == 10
         assert batch2.available_quantity == 50
 
-        messagebus.handle(
-            events.BatchQuantityChanged('batch1', 25)
-            , uow
-        )
+        messagebus.handle(commands.ChangeBatchQuantity('batch1', 25), uow)
         # order 1 and order2 will be deallocated, so we'll have 25 - 20
         assert batch1.available_quantity == 5
         # and 20 will be reallocated to the next batch

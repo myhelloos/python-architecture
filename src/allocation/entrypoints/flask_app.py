@@ -10,7 +10,7 @@
 from datetime import datetime
 
 from allocation.adapters import orm
-from allocation.domain import events
+from allocation.domain import commands
 from allocation.service_layer import handlers, unit_of_work, messagebus
 from flask import Flask, request, jsonify
 
@@ -21,7 +21,7 @@ orm.start_mappers()
 @app.route('/allocate', methods=['POST'])
 def allocate_endpoint():
     try:
-        event = events.AllocationRequired(
+        event = commands.Allocate(
             request.json['orderid']
             , request.json['sku']
             , request.json['qty']
@@ -40,7 +40,7 @@ def add_stock():
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
 
-    event = events.BatchCreated(
+    event = commands.CreateBatch(
         request.json['ref']
         , request.json['sku']
         , request.json['qty']
