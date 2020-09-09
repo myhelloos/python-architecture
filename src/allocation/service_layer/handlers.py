@@ -21,7 +21,7 @@ class InvalidSku(Exception):
 def allocate(
         command: commands.Allocate
         , uow: unit_of_work.AbstractUnitOfWork
-) -> str:
+):
     with uow:
         product = uow.products.get(sku=command.sku)
 
@@ -29,9 +29,9 @@ def allocate(
             raise InvalidSku(f'Invalid sku {command.sku}')
 
         line = model.OrderLine(command.orderid, command.sku, command.qty)
-        batch_ref = product.allocate(line)
+        product.allocate(line)
+
         uow.commit()
-        return batch_ref
 
 
 def add_batch(

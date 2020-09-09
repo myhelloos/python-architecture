@@ -15,7 +15,7 @@ from ..random_refs import random_sku, random_batchref, random_orderid
 
 @pytest.mark.usefixtures('postgres_db')
 @pytest.mark.usefixtures('restart_api')
-def test_happy_path_returns_201_and_allocated_batch():
+def test_happy_path_returns_202_and_allocated_batch():
     sku, other_sku = random_sku(), random_sku('other')
     early_batch = random_batchref(1)
     later_batch = random_batchref(2)
@@ -25,9 +25,13 @@ def test_happy_path_returns_201_and_allocated_batch():
     api_client.post_to_add_batch(early_batch, sku, 100, '2011-01-01')
     api_client.post_to_add_batch(other_batch, other_sku, 100, None)
 
-    r = api_client.post_to_allocate(random_orderid(), sku, qty=3)
+    orderid = random_orderid()
+    r = api_client.post_to_allocate(orderid, sku, qty=3)
+    assert r.status_code == 202
 
-    assert r.json()['batchref'] == early_batch
+    r = api_client.get_allocation(orderid)
+    assert r.ok
+    assert r.json() == [{'sku': sku, 'batchref': early_batch}]
 
 
 @pytest.mark.usefixtures('postgres_db')
@@ -39,3 +43,6 @@ def test_unhappy_path_returns_400_and_error_message():
 
     assert r.status_code == 400
     assert r.json()['message'] == f'Invalid sku {unknown_sku}'
+
+    r = api_client.get_allocation(order_id)
+    assert r.status_code == 404

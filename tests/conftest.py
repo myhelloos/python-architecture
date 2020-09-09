@@ -25,6 +25,8 @@ from sqlalchemy.orm import sessionmaker, clear_mappers
 from allocation import config
 from allocation.adapters.orm import metadata, start_mappers
 
+pytest.register_assert_rewrite('tests.e2e.api_client')
+
 
 @pytest.fixture
 def in_memory_db():
