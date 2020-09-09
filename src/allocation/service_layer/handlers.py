@@ -83,13 +83,7 @@ def add_allocation_to_read_model(
         event: events.Allocated
         , uow: unit_of_work.AbstractUnitOfWork
 ):
-    with uow:
-        uow.session.execute(
-            'INSERT INTO allocations_view (orderid, sku, batchref)'
-            ' VALUES (:orderid, :sku, :batchref)'
-            , dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref)
-        )
-        uow.commit()
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, event.batchref)
 
 
 def reallocate(
@@ -106,10 +100,4 @@ def remove_allocation_from_read_model(
         event: events.Deallocated
         , uow: unit_of_work.AbstractUnitOfWork
 ):
-    with uow:
-        uow.session.execute(
-            'DELETE FROM allocations_view'
-            ' WHERE orderid = :orderid AND sku = :sku'
-            , dict(orderid=event.orderid, sku=event.sku)
-        )
-        uow.commit()
+    redis_eventpublisher.update_readmodel(event.orderid, event.sku, None)

@@ -6,14 +6,11 @@
 @time: 2020/9/9 12:39 PM
 @desc:
 """
-from allocation.service_layer import unit_of_work
+from allocation.entrypoints import redis_eventpublisher
 
 
-def allocations(orderid: str, uow: unit_of_work.AbstractUnitOfWork):
-    with uow:
-        results = list(uow.session.execute(
-            'SELECT sku, batchref FROM allocations_view WHERE orderid = :orderid'
-            , dict(orderid=orderid)
-        ))
-
-    return [dict(r) for r in results]
+def allocations(orderid: str):
+    batches = redis_eventpublisher.get_readmodel(orderid)
+    return [
+        {'batchref': b.decode(), 'sku': s.decode()} for s, b in batches.items()
+    ]

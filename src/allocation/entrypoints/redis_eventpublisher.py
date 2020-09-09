@@ -21,3 +21,14 @@ logger = logging.getLogger(__name__)
 def publish(channel, event: events.Event):
     logger.debug('publishing: channel=%s, event=%s', channel, event)
     r.publish(channel, json.dumps(asdict(event)))
+
+
+def update_readmodel(orderid, sku, batchref):
+    if batchref:
+        r.hset(orderid, sku, batchref)
+    else:
+        r.hdel(orderid, sku)
+
+
+def get_readmodel(orderid):
+    return r.hgetall(orderid)

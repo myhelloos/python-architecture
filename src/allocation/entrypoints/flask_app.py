@@ -21,9 +21,7 @@ orm.start_mappers()
 
 @app.route('/allocations/<orderid>', methods=['GET'])
 def allocations_view_endpoint(orderid):
-    uow = unit_of_work.SqlAlchemyUnitOfWork()
-
-    result = views.allocations(orderid, uow)
+    result = views.allocations(orderid)
 
     if not result:
         return 'not found', 404

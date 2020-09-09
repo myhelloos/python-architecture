@@ -8,6 +8,7 @@
 @time: 2020/9/2 11:39 AM
 @desc:
 """
+import logging
 import shutil
 import subprocess
 from pathlib import Path
@@ -117,3 +118,12 @@ def restart_redis_pubsub():
         ['docker-compose', 'restart', '-t', '0', 'redis_pubsub']
         , check=True
     )
+
+
+@pytest.fixture
+def cleanup_redis():
+    r = redis.Redis(**config.get_redis_host_and_port())
+    yield
+    for k in r.keys():
+        logging.info('cleaning up redis key', k)
+        r.delete(k)

@@ -78,6 +78,7 @@ class TestAddBatch:
 
 
 class TestAllocate:
+    @pytest.mark.usefixtures('cleanup_redis')
     def test_returns_allocation(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
@@ -93,6 +94,7 @@ class TestAllocate:
         [batch] = uow.products.get('COMPLICATED-LAMP').batches
         assert batch.available_quantity == 90
 
+    @pytest.mark.usefixtures('cleanup_redis')
     def test_error_for_invalid_sku(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
@@ -106,6 +108,7 @@ class TestAllocate:
                 , uow
             )
 
+    @pytest.mark.usefixtures('cleanup_redis')
     def test_commits(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
@@ -120,6 +123,7 @@ class TestAllocate:
 
         assert uow.committed is True
 
+    @pytest.mark.usefixtures('cleanup_redis')
     def test_sends_email_on_out_of_stock_error(self):
         uow = FakeUnitOfWork()
         messagebus.handle(
@@ -152,6 +156,7 @@ class TestChangeBatchQuantity:
         messagebus.handle(commands.ChangeBatchQuantity('batch1', 50), uow)
         assert batch.available_quantity == 50
 
+    @pytest.mark.usefixtures('cleanup_redis')
     def test_reallocates_if_necessary(self):
         uow = FakeUnitOfWork()
         event_history = [
