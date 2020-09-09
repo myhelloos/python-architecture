@@ -86,5 +86,5 @@ EVENT_HANDLERS = {
 COMMAND_HANDLERS = {
     commands.CreateBatch: handlers.add_batch
     , commands.Allocate: handlers.allocate
-    , commands.ChangeBatchQuantity: handlers.change_batch_qunatity
+    , commands.ChangeBatchQuantity: handlers.change_batch_quantity
 }  # type: Dict[Type[commands.Command], Callable]

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+# pylint: disable=unused-argument
 """
 @author: alfred
 @license: (C) Copyright 2019-2020, Alfred Yuan Limited.
@@ -59,7 +60,7 @@ def send_out_of_stock_notification(
     )
 
 
-def change_batch_qunatity(
+def change_batch_quantity(
         command: commands.ChangeBatchQuantity
         , uow: unit_of_work.AbstractUnitOfWork
 ):
