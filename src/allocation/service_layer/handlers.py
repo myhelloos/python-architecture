@@ -8,6 +8,8 @@
 @time: 2020/9/4 11:17 AM
 @desc:
 """
+from dataclasses import asdict
+
 from allocation.adapters import email
 from allocation.domain import model, events, commands
 from allocation.entrypoints import redis_eventpublisher
@@ -75,3 +77,39 @@ def publish_allocated_event(
         , uow: unit_of_work.AbstractUnitOfWork
 ):
     redis_eventpublisher.publish('line_allocated', event)
+
+
+def add_allocation_to_read_model(
+        event: events.Allocated
+        , uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.session.execute(
+            'INSERT INTO allocations_view (orderid, sku, batchref)'
+            ' VALUES (:orderid, :sku, :batchref)'
+            , dict(orderid=event.orderid, sku=event.sku, batchref=event.batchref)
+        )
+        uow.commit()
+
+
+def reallocate(
+        event: events.Deallocated
+        , uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        product = uow.products.get(sku=event.sku)
+        product.events.append(commands.Allocate(**asdict(event)))
+        uow.commit()
+
+
+def remove_allocation_from_read_model(
+        event: events.Deallocated
+        , uow: unit_of_work.AbstractUnitOfWork
+):
+    with uow:
+        uow.session.execute(
+            'DELETE FROM allocations_view'
+            ' WHERE orderid = :orderid AND sku = :sku'
+            , dict(orderid=event.orderid, sku=event.sku)
+        )
+        uow.commit()

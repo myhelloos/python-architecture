@@ -33,12 +33,12 @@ def allocations_view_endpoint(orderid):
 @app.route('/allocations', methods=['POST'])
 def allocate_endpoint():
     try:
-        event = commands.Allocate(
+        command = commands.Allocate(
             request.json['orderid']
             , request.json['sku']
             , request.json['qty']
         )
-        messagebus.handle(event, unit_of_work.SqlAlchemyUnitOfWork())
+        messagebus.handle(command, unit_of_work.SqlAlchemyUnitOfWork())
     except handlers.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
@@ -51,14 +51,14 @@ def add_stock():
     if eta is not None:
         eta = datetime.fromisoformat(eta).date()
 
-    event = commands.CreateBatch(
+    command = commands.CreateBatch(
         request.json['ref']
         , request.json['sku']
         , request.json['qty']
         , eta
     )
     messagebus.handle(
-        event
+        command
         , unit_of_work.SqlAlchemyUnitOfWork()
     )
 

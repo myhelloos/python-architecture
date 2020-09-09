@@ -49,9 +49,8 @@ def handle_command(
     logger.debug('handling command %s', command)
     try:
         handler = COMMAND_HANDLERS[type(command)]
-        result = handler(command, uow)
+        handler(command, uow)
         queue.extend(uow.collect_new_events())
-        return result
     except Exception:
         logger.exception('Exception handling cmmand %s', command)
         raise
@@ -63,24 +62,27 @@ def handle(
 ):
     queue = [message]
 
-    results = []
     while queue:
         message = queue.pop(0)
 
         if isinstance(message, events.Event):
             handle_event(message, queue, uow)
         elif isinstance(message, commands.Command):
-            cmd_result = handle_command(message, queue, uow)
-            results.append(cmd_result)
+            handle_command(message, queue, uow)
         else:
             raise Exception(f'{message} was not an Event or Command')
-
-    return results
 
 
 EVENT_HANDLERS = {
     events.OutOfStock: [handlers.send_out_of_stock_notification]
-    , events.Allocated: [handlers.publish_allocated_event]
+    , events.Allocated: [
+        handlers.publish_allocated_event
+        , handlers.add_allocation_to_read_model
+    ]
+    , events.Deallocated: [
+        handlers.remove_allocation_from_read_model
+        , handlers.reallocate
+    ]
 }  # type: Dict[Type[events.Event], List[Callable]]
 
 COMMAND_HANDLERS = {
