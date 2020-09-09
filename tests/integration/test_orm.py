@@ -11,8 +11,8 @@ from datetime import date
 from allocation.domain import model
 
 
-def test_orderline_mapper_can_load_lines(session):
-    session.execute(
+def test_orderline_mapper_can_load_lines(sqlite_session):
+    sqlite_session.execute(
         'INSERT INTO order_lines (orderid, sku, qty) VALUES '
         '("order1", "RED-CHAIR", 12),'
         '("order1", "RED-TABLE", 13),'
@@ -23,23 +23,23 @@ def test_orderline_mapper_can_load_lines(session):
         , model.OrderLine("order1", "RED-TABLE", 13)
         , model.OrderLine("order2", "BLUE-LIPSTICK", 14)
     ]
-    assert session.query(model.OrderLine).all() == expected
+    assert sqlite_session.query(model.OrderLine).all() == expected
 
 
-def test_orderline_mapper_can_save_lines(session):
+def test_orderline_mapper_can_save_lines(sqlite_session):
     new_line = model.OrderLine("order1", "DECORATIVE-WIDGET", 12)
-    session.add(new_line)
-    session.commit()
+    sqlite_session.add(new_line)
+    sqlite_session.commit()
 
-    rows = list(session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
+    rows = list(sqlite_session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
     assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
 
 
-def test_retrieving_batches(session):
-    session.execute(
+def test_retrieving_batches(sqlite_session):
+    sqlite_session.execute(
         'INSERT INTO "batches" (reference, sku, _purchased_quantity, eta)'
         'VALUES ("batch1", "sku1", 100, null)')
-    session.execute(
+    sqlite_session.execute(
         'INSERT INTO "batches" (reference, sku, _purchased_quantity, eta)'
         'VALUES ("batch2", "sku2", 200, "2011-04-11")')
 
@@ -48,56 +48,56 @@ def test_retrieving_batches(session):
         , model.Batch("batch2", "sku2", 200, eta=date(2011, 4, 11))
     ]
 
-    assert session.query(model.Batch).all() == expected
+    assert sqlite_session.query(model.Batch).all() == expected
 
 
-def test_saving_batches(session):
+def test_saving_batches(sqlite_session):
     batch = model.Batch('batch1', 'sku1', 100, eta=None)
-    session.add(batch)
-    session.commit()
+    sqlite_session.add(batch)
+    sqlite_session.commit()
 
-    rows = list(session.execute(
+    rows = list(sqlite_session.execute(
         'SELECT reference, sku, _purchased_quantity, eta FROM `batches`'
     ))
 
     assert rows == [('batch1', 'sku1', 100, None)]
 
 
-def test_saving_allocations(session):
+def test_saving_allocations(sqlite_session):
     batch = model.Batch('batch1', 'sku1', 100, eta=None)
     line = model.OrderLine('order1', 'sku1', 10)
     batch.allocate(line)
-    session.add(batch)
-    session.commit()
+    sqlite_session.add(batch)
+    sqlite_session.commit()
 
-    rows = list(session.execute(
+    rows = list(sqlite_session.execute(
         'SELECT orderline_id, batch_id FROM `allocations`'
     ))
 
     assert rows == [(line.id, batch.id)]
 
 
-def test_retrieving_allocations(session):
-    session.execute(
+def test_retrieving_allocations(sqlite_session):
+    sqlite_session.execute(
         'INSERT INTO order_lines (orderid, sku, qty)'
         'VALUES ("order1", "sku1", 12)'
     )
-    [[olid]] = session.execute(
+    [[olid]] = sqlite_session.execute(
         'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku'
         , dict(orderid='order1', sku='sku1')
     )
-    session.execute(
+    sqlite_session.execute(
         'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
         'VALUES ("batch1", "sku1", 100, null)'
     )
-    [[bid]] = session.execute(
+    [[bid]] = sqlite_session.execute(
         'SELECT id FROM batches WHERE reference=:ref AND sku=:sku'
         , dict(ref='batch1', sku='sku1')
     )
-    session.execute(
+    sqlite_session.execute(
         'INSERT INTO allocations (orderline_id, batch_id) VALUES (:olid, :bid)'
         , dict(olid=olid, bid=bid)
     )
-    batch = session.query(model.Batch).one()
+    batch = sqlite_session.query(model.Batch).one()
 
     assert batch._allocations == {model.OrderLine("order1", "sku1", 12)}
