@@ -6,7 +6,7 @@
 @time: 2020/9/9 12:39 PM
 @desc:
 """
-from allocation.entrypoints import redis_eventpublisher
+from allocation.adapters import redis_eventpublisher
 
 
 def allocations(orderid: str):

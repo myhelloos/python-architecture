@@ -9,8 +9,8 @@
 import inspect
 from typing import Callable
 
-from allocation.adapters import email, orm
-from allocation.entrypoints import redis_eventpublisher
+from allocation.adapters import orm, redis_eventpublisher
+from allocation.adapters.notifications import AbstractNotifications, EmailNotifications
 from allocation.service_layer import unit_of_work, messagebus, handlers
 
 
@@ -26,7 +26,7 @@ def inject_dependencies(handler, dependencies):
 def bootstrap(
         start_orm: bool = True
         , uow: unit_of_work.AbstractUnitOfWork = unit_of_work.SqlAlchemyUnitOfWork()
-        , send_mail: Callable = email.send_mail
+        , notifications: AbstractNotifications = EmailNotifications()
         , publish: Callable = redis_eventpublisher.publish
         , update_readmodel: Callable = redis_eventpublisher.update_readmodel
 ) -> messagebus.MessageBus:
@@ -35,7 +35,7 @@ def bootstrap(
 
     dependencies = {
         'uow': uow
-        , 'send_mail': send_mail
+        , 'notifications': notifications
         , 'publish': publish
         , 'update_readmodel': update_readmodel
     }

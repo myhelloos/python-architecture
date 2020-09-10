@@ -7,11 +7,12 @@
 @desc:
 """
 from datetime import date
+from unittest import mock
 
 import pytest
 from allocation import views, bootstrap
 from allocation.domain import commands
-from allocation.entrypoints import redis_eventpublisher
+from allocation.adapters import redis_eventpublisher
 from allocation.service_layer import unit_of_work
 from sqlalchemy.orm import clear_mappers
 
@@ -23,7 +24,7 @@ def sqlite_bus(sqlite_session_factory):
     bus = bootstrap.bootstrap(
         start_orm=True
         , uow=unit_of_work.SqlAlchemyUnitOfWork(sqlite_session_factory)
-        , send_mail=lambda *args: None
+        , notifications=mock.Mock()
         , publish=lambda *args: None
         , update_readmodel=redis_eventpublisher.update_readmodel
     )

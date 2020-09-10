@@ -6,13 +6,14 @@
 @time: 2020/9/3 6:17 PM
 @desc:
 """
+from collections import defaultdict
 from datetime import date
 
 import pytest
 from allocation import bootstrap
 
 from allocation.domain import model, commands
-from allocation.adapters import repository
+from allocation.adapters import repository, notifications
 from allocation.service_layer import handlers, unit_of_work
 
 
@@ -49,11 +50,20 @@ class FakeUnitOfWork(unit_of_work.AbstractUnitOfWork):
         pass
 
 
+class FakeNotifications(notifications.AbstractNotifications):
+
+    def __init__(self):
+        self.sent = defaultdict(list)  # type: Dict[str, List[str]]
+
+    def send(self, destination, message):
+        self.sent[destination].append(message)
+
+
 def bootstrap_test_app():
     return bootstrap.bootstrap(
         start_orm=False
         , uow=FakeUnitOfWork()
-        , send_mail=lambda *args: None
+        , notifications=FakeNotifications()
         , publish=lambda *args: None
         , update_readmodel=lambda *args: None
     )
@@ -111,15 +121,12 @@ class TestAllocate:
 
     @pytest.mark.usefixtures('cleanup_redis')
     def test_sends_email_on_out_of_stock_error(self):
-        emails = []
-
-        def fake_send_email(*args):
-            emails.append(args)
+        fake_notifications = FakeNotifications()
 
         bus = bootstrap.bootstrap(
             start_orm=False
             , uow=FakeUnitOfWork()
-            , send_mail=fake_send_email
+            , notifications=fake_notifications
             , publish=lambda *args: None
             , update_readmodel=lambda *args: None
         )
@@ -127,7 +134,7 @@ class TestAllocate:
         bus.handle(commands.CreateBatch('b1', 'POPULAR-CURTAINS', 9, None))
         bus.handle(commands.Allocate('o1', 'POPULAR-CURTAINS', 10))
 
-        assert emails == [("stock@made.com", f"Out of stock for POPULAR-CURTAINS")]
+        assert fake_notifications.sent['stock@made.com'] == ["Out of stock for POPULAR-CURTAINS"]
 
 
 class TestChangeBatchQuantity:
