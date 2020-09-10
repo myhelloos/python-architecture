@@ -8,13 +8,14 @@
 @time: 2020/9/4 11:17 AM
 @desc:
 """
+from __future__ import annotations
 from dataclasses import asdict
+from typing import TYPE_CHECKING, Callable
 
-from allocation.adapters import email
 from allocation.domain import model, events, commands
-from allocation.entrypoints import redis_eventpublisher
 
-from . import unit_of_work
+if TYPE_CHECKING:
+    from . import unit_of_work
 
 
 class InvalidSku(Exception):
@@ -54,9 +55,9 @@ def add_batch(
 
 def send_out_of_stock_notification(
         event: events.OutOfStock
-        , uow: unit_of_work.AbstractUnitOfWork
+        , send_mail: Callable
 ):
-    email.send_mail(
+    send_mail(
         'stock@made.com'
         , f'Out of stock for {event.sku}'
     )
@@ -74,30 +75,40 @@ def change_batch_quantity(
 
 def publish_allocated_event(
         event: events.Allocated
-        , uow: unit_of_work.AbstractUnitOfWork
+        , publish: Callable
 ):
-    redis_eventpublisher.publish('line_allocated', event)
+    publish('line_allocated', event)
 
 
 def add_allocation_to_read_model(
         event: events.Allocated
-        , uow: unit_of_work.AbstractUnitOfWork
+        , update_readmodel: Callable
 ):
-    redis_eventpublisher.update_readmodel(event.orderid, event.sku, event.batchref)
+    update_readmodel(event.orderid, event.sku, event.batchref)
 
 
 def reallocate(
         event: events.Deallocated
         , uow: unit_of_work.AbstractUnitOfWork
 ):
-    with uow:
-        product = uow.products.get(sku=event.sku)
-        product.events.append(commands.Allocate(**asdict(event)))
-        uow.commit()
+    allocate(commands.Allocate(**asdict(event)), uow=uow)
 
 
 def remove_allocation_from_read_model(
         event: events.Deallocated
-        , uow: unit_of_work.AbstractUnitOfWork
+        , update_readmodel: Callable
 ):
-    redis_eventpublisher.update_readmodel(event.orderid, event.sku, None)
+    update_readmodel(event.orderid, event.sku, None)
+
+
+EVENT_HANDLERS = {
+    events.OutOfStock: [send_out_of_stock_notification]
+    , events.Allocated: [publish_allocated_event, add_allocation_to_read_model]
+    , events.Deallocated: [remove_allocation_from_read_model, reallocate]
+}  # type: Dict[Type[events.Event], List[Callable]]
+
+COMMAND_HANDLERS = {
+    commands.CreateBatch: add_batch
+    , commands.Allocate: allocate
+    , commands.ChangeBatchQuantity: change_batch_quantity
+}  # type: Dict[Type[commands.Command], Callable]

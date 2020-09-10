@@ -10,29 +10,28 @@ import json
 import logging
 
 import redis
-from allocation import config
-from allocation.adapters import orm
+from allocation import config, bootstrap
 from allocation.domain import commands
-from allocation.service_layer import messagebus, unit_of_work
+from allocation.service_layer import unit_of_work
 
 r = redis.Redis(**config.get_redis_host_and_port())
 logger = logging.getLogger(__name__)
 
 
-def handle_change_batch_quantity(m):
+def handle_change_batch_quantity(m, bus):
     logger.debug('handing %s', m)
     data = json.loads(m['data'])
     command = commands.ChangeBatchQuantity(ref=data['batchref'], qty=data['qty'])
-    messagebus.handle(command, uow=unit_of_work.SqlAlchemyUnitOfWork())
+    bus.handle(command)
 
 
 def main():
-    orm.start_mappers()
+    bus = bootstrap.bootstrap()
     pubsub = r.pubsub(ignore_subscribe_messages=True)
     pubsub.subscribe('change_batch_quantity')
 
     for m in pubsub.listen():
-        handle_change_batch_quantity(m)
+        handle_change_batch_quantity(m, bus)
 
 
 if __name__ == '__main__':

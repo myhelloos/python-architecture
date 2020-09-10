@@ -9,14 +9,13 @@
 """
 from datetime import datetime
 
-from allocation import views
-from allocation.adapters import orm
+from allocation import views, bootstrap
 from allocation.domain import commands
-from allocation.service_layer import handlers, unit_of_work, messagebus
+from allocation.service_layer import handlers, unit_of_work
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-orm.start_mappers()
+bus = bootstrap.bootstrap()
 
 
 @app.route('/allocations/<orderid>', methods=['GET'])
@@ -36,7 +35,7 @@ def allocate_endpoint():
             , request.json['sku']
             , request.json['qty']
         )
-        messagebus.handle(command, unit_of_work.SqlAlchemyUnitOfWork())
+        bus.handle(command)
     except handlers.InvalidSku as e:
         return jsonify({'message': str(e)}), 400
 
@@ -55,9 +54,6 @@ def add_stock():
         , request.json['qty']
         , eta
     )
-    messagebus.handle(
-        command
-        , unit_of_work.SqlAlchemyUnitOfWork()
-    )
+    bus.handle(command)
 
     return 'OK', 201

@@ -8,7 +8,10 @@
 """
 from datetime import date
 
+import pytest
 from allocation.domain import model
+
+pytestmark = pytest.mark.usefixtures('mappers')
 
 
 def test_orderline_mapper_can_load_lines(sqlite_session):
